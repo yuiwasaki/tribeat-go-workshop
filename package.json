@@ -1,0 +1,13 @@
+{
+  "name": "openapi-sample",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+	"scripts": {
+		"oapi": "oapi-codegen -generate \"server\" -package oapi sample.yml > oapi/openapi.gen.go && oapi-codegen -generate \"types\" -package oapi sample.yml > oapi/types.gen.go",
+		"doc": "redoc-cli bundle sample.yml"
+	},
+  "devDependencies": {
+    "redoc-cli": "^0.12.2"
+  }
+}

@@ -1,0 +1,327 @@
+openapi: 3.0.0
+tags: []
+info:
+  title: sample-api
+  version: '1.0'
+  description: SAMPLE用のAPIリファレンス
+  contact:
+    name: tribeat
+    url: 'https://tribeat.com'
+    email: info@tribeat.com
+
+paths:
+  /api/healthcheck:
+    get:
+      summary: ヘルスチェック
+      tags: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultOK'
+        '500':
+          description: NG
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+  /api/login:
+    post:
+      summary: ログイン
+      tags: []
+      requestBody:
+        description: ログイン情報
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/requestLogin'
+      responses:
+        '201':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultOK'
+        '401':
+          description: ログイン失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+  /api/client/users:
+    get:
+      summary: ユーザー一覧取得
+      tags: []
+      responses:
+        '200':
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultUsers'
+        '401':
+          description: ログインされていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+    post:
+      summary: ユーザー新規登録
+      tags: []
+      requestBody:
+        description: ユーザー情報
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/requestUser'
+      responses:
+        '201':
+          description: ユーザー登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultOK'
+        '401':
+          description: ログイン失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+
+  /api/client/users/{userId}:
+    get:
+      summary: ユーザー一覧取得
+      tags: []
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: ユーザー情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultUser'
+        '401':
+          description: ログインされていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+        '404':
+          description: 存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+  /api/client/groups:
+    get:
+      summary: グループ一覧取得
+      tags: []
+      responses:
+        '200':
+          description: グループ一覧情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultGroupsGet'
+        '401':
+          description: ログインされていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+        '404':
+          description: 存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+    post:
+      summary: グループ作成
+      requestBody:
+        description: ログイン情報
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/requestGroupsPost'
+      responses:
+        '201':
+          description: グループ情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultGroupsPost'
+        '401':
+          description: ログインされていない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/resultError'
+
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      description: ユーザーID
+      required: true
+      schema:
+        type: string
+ 
+  schemas:
+    resultOK:
+      type: object
+      description: 成功
+      properties:
+        result:
+          type: boolean
+          description: 結果
+      required:
+        - result
+          
+    resultError:
+      type: object
+      description: エラー結果
+      properties:
+        result:
+          type: boolean
+          description: 結果
+        error:
+          $ref: '#/components/schemas/error'
+      required:
+        - result
+        - error
+
+    error:
+      type: object
+      description: エラー情報
+      properties:
+        statusCode:
+          type: number
+          description: ステータスコード
+        errorCode:
+          type: string
+          description: エラーコード
+        detail:
+          type: string
+          description: エラー内容
+      required:
+        - statusCode
+        - errorCode
+        - detail
+    requestGroupsPost:
+      type: object
+      description: グループ情報
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: グループ名
+      required:
+        - name
+    resultGroupsPost:
+      type: object
+      description: グループ作成成功
+      properties:
+        result:
+          type: boolean
+          description: 結果
+          example: true
+        data:
+          $ref: '#/components/schemas/group'
+      required:
+        - result
+        - data
+    requestLogin:
+      type: object
+      description: ログイン情報
+      properties:
+        email:
+          type: string
+          maxLength: 260
+          format: email
+        password:
+          type: string
+          maxLength: 100
+          minLength: 6
+          pattern: ^[A-Za-z0-9]+$
+      required:
+        - email
+        - password
+    requestUser:
+      type: object
+      description: 追加するユーザー情報
+      properties:
+        name:
+          type: string
+          maxLength: 100
+      required:
+        - name
+    resultUsers:
+      type: object
+      description: ユーザー一覧
+      properties:
+        count:
+          type: integer
+          description: 件数
+        data:
+          type: array
+          description: ユーザー
+          items:
+            $ref: '#/components/schemas/user'
+      required:
+        - count
+        - data
+    resultUser:
+      $ref: '#/components/schemas/user'
+
+    user:
+      type: object
+      description: ユーザー情報
+      properties:
+        name:
+          type: string
+          description: 名前
+        id:
+          type: string
+          description: ユーザーID
+      required:
+        - name
+        - id
+
+    resultGroupsGet:
+      type: object
+      description: グループ一覧情報
+      properties:
+        count:
+          type: integer
+          description: 件数
+        data:
+          type: array
+          description: 一覧データ
+          items:
+            $ref: '#/components/schemas/group'
+      required:
+        - count
+        - data
+    group:
+      type: object
+      description: グループデータ
+      properties:
+        id:
+          type: string
+          description: グループID
+          x-oapi-codegen-extra-tags:
+            gorm: "primaryKey;type:varchar(32)"
+        name:
+          type: string
+          description: グループ名
+          maxLength: 100
+          x-oapi-codegen-extra-tags:
+            gorm: "type:varchar(100);not null"
+      required:
+        - id
+        - name
+
