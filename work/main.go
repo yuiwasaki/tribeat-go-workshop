@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/google/uuid"
@@ -17,15 +16,11 @@ type APIHandler struct {
 }
 
 func main() {
-	fmt.Println("START")
-	fmt.Println("CONNECT DB")
 	db, err := models.NewModel()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("DB CONNECTED")
-
 	e := echo.New()
 	e.Use(errorMeesageMiddleware)
 	f, err := middleware.OapiValidatorFromYamlFile("./sample.yml")
@@ -76,18 +71,16 @@ func (api APIHandler) PostApiClientGroups(ctx echo.Context) error {
 	}
 
 	id, _ := uuid.NewRandom()
+	model := models.NewGroupModel(api.db)
 	group := oapi.Group{
 		Id:   id.String(),
 		Name: req.Name,
 	}
-	now := time.Now()
-	tx := api.db.Create(&models.Group{
-		Group:     group,
-		CreatedAt: now,
-		UpdatedAt: now,
+	err = model.Save(models.Group{
+		Group: group,
 	})
-	if tx.Error != nil {
-		fmt.Println(tx.Error)
+	if err != nil {
+		fmt.Println(err)
 		return ErrorResult(ctx, http.StatusInternalServerError, "保存失敗", "サーバー内エラーが発生しました")
 	}
 	return ctx.JSON(http.StatusCreated, oapi.ResultGroupsPost{
@@ -193,9 +186,6 @@ func ErrorResult(ctx echo.Context, status int, code, detail string) error {
 
 // GetApiHealthcheck converts echo context to params.
 func (api APIHandler) GetApiHealthcheck(ctx echo.Context) error {
-	//if err != nil {
-	//	return ErrorResult(ctx, http.StatusInternalServerError, "ERROR123", "HOGE")
-	//}
 	result := oapi.ResultOK{
 		Result: true,
 	}
@@ -220,12 +210,21 @@ func (api APIHandler) PostApiLogin(ctx echo.Context) error {
 // グループ一覧取得
 // (GET /api/client/groups)
 func (api APIHandler) GetApiClientGroups(ctx echo.Context) error {
-	_, err := api.db.SelectGroups()
+	model := models.NewGroupModel(api.db)
+	groups, err := model.All()
 	if err != nil {
 		fmt.Println(err)
 		return ErrorResult(ctx, http.StatusInternalServerError, "サーバーエラー", "エラー発生")
 	}
-	return nil
+	gs := make([]oapi.Group, len(groups))
+	for i, g := range groups {
+		gs[i] = g.Group
+	}
+	result := oapi.ResultGroupsGet{
+		Count: len(groups),
+		Data:  gs,
+	}
+	return ctx.JSON(http.StatusOK, result)
 }
 
 func RegisterHandlers(router *echo.Echo, handler APIHandler) {

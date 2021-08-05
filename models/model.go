@@ -13,6 +13,14 @@ type DefaultModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
+func InitDefaultModel() DefaultModel {
+	now := time.Now()
+	return DefaultModel{
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+}
+
 type Model struct {
 	*gorm.DB
 }

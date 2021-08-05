@@ -5,5 +5,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: sample
+    volumes:
+      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
     ports:
       - "3306:3306"

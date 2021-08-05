@@ -22,7 +22,7 @@ type Error struct {
 // グループデータ
 type Group struct {
 	// グループID
-	Id string `gorm:"primaryKey;type:varchar(32)" json:"id"`
+	Id string `gorm:"primaryKey;type:varchar(36)" json:"id"`
 
 	// グループ名
 	Name string `gorm:"type:varchar(100);not null" json:"name"`

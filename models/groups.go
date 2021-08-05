@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/yuiwasaki/tribeat-go-workshop/oapi"
@@ -36,11 +37,9 @@ func (model *GroupModel) Save(group Group) error {
 	now := time.Now()
 	group.CreatedAt = now
 	group.UpdatedAt = now
+	fmt.Println(group)
 	tx := model.Create(group)
-	if tx.Error != nil {
-		return tx.Error
-	}
-	return nil
+	return tx.Error
 }
 
 // Delete 削除

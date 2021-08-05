@@ -217,7 +217,8 @@ components:
       properties:
         name:
           type: string
-          maxLength: 100
+          minLength: 1
+          maxLength: 10
           description: グループ名
       required:
         - name
@@ -314,11 +315,10 @@ components:
           type: string
           description: グループID
           x-oapi-codegen-extra-tags:
-            gorm: "primaryKey;type:varchar(32)"
+            gorm: "primaryKey;type:varchar(36)"
         name:
           type: string
           description: グループ名
-          maxLength: 100
           x-oapi-codegen-extra-tags:
             gorm: "type:varchar(100);not null"
       required:
