@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func deferSample1() {
 	fmt.Println("POINT:1")
@@ -54,7 +56,8 @@ func sampleReturn() (err error) {
 	defer func() {
 		fmt.Println(err)
 	}()
-	return nil // fmt.Errorf("ERROR")
+	err = fmt.Errorf("ERROR")
+	return err
 }
 
 func main() {
@@ -69,7 +72,7 @@ func main() {
 	fmt.Println("-4--------------------------")
 	deferSample2(4)
 	fmt.Println("-5--------------------------")
-	deferSample3(1)
+	deferSample3(3)
 	fmt.Println("-6--------------------------")
 	sampleReturn()
 }
