@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/deepmap/oapi-codegen/pkg/middleware"
 	"github.com/labstack/echo/v4"
 	"github.com/yuiwasaki/tribeat-go-workshop/oapi"
 )
@@ -72,13 +73,35 @@ func (APIHandler) PostApiLogin(ctx echo.Context) error {
 		fmt.Println(err)
 		return ErrorResult(ctx, http.StatusInternalServerError, "ERROR", err.Error())
 	}
-	return ctx.JSON(http.StatusCreated, nil)
+	return fmt.Errorf("よくわからないエラー")
+}
+
+func errorHandleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		// 処理
+		err := next(ctx)
+		if err != nil {
+			if e, ok := err.(*echo.HTTPError); ok {
+				return ErrorResult(ctx, e.Code, "BAD REQUEST", fmt.Sprintf("パラメーターが正しくない[%v]", e.Message))
+			}
+			return ErrorResult(ctx, http.StatusInternalServerError, "INTERNAL SERVER ERROR", fmt.Sprintf("サーバー内でエラーが発生しました[%v]", err))
+		}
+		return nil
+	}
 }
 
 // RegisterHandler ハンドラーをセットする
-func (handler APIHandler) RegisterHandler(router *echo.Echo) {
+func (handler APIHandler) RegisterHandler(router *echo.Echo) error {
+	f, err := middleware.OapiValidatorFromYamlFile("./sample.yml")
+	if err != nil {
+		return err
+	}
 	wrapper := oapi.ServerInterfaceWrapper{
 		Handler: handler,
 	}
+	router.Use(errorHandleMiddleware)
+	router.Use(f)
 	router.GET("/api/healthcheck", wrapper.GetApiHealthcheck)
+	router.POST("/api/login", wrapper.PostApiLogin)
+	return nil
 }
