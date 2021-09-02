@@ -16,11 +16,11 @@ type APIHandler struct {
 }
 
 func main() {
-	db, err := models.NewModel()
+	/*db, err := models.NewModel()
 	if err != nil {
 		fmt.Println(err)
 		return
-	}
+	}*/
 	e := echo.New()
 	e.Use(errorMeesageMiddleware)
 	f, err := middleware.OapiValidatorFromYamlFile("./sample.yml")
@@ -30,7 +30,7 @@ func main() {
 	}
 	e.Use(f)
 	handler := APIHandler{
-		db: db,
+		//db: db,
 	}
 	RegisterHandlers(e, handler)
 	e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:%d", 3003)))
@@ -38,7 +38,7 @@ func main() {
 
 // ユーザー一覧取得
 // (GET /api/client/users)
-func (api APIHandler) GetApiClientUsers(ctx echo.Context) error {
+func (api APIHandler) GetApiClientUsers(ctx echo.Context, params oapi.GetApiClientUsersParams) error {
 	/*if err == NotFound {
 		// 404
 	}*/
@@ -108,19 +108,45 @@ var (
 	ERR_INVALID_TOKEN = fmt.Errorf("INVALID TOKEN")
 )
 
+type MemberId struct {
+	MemberId string `json:"member_id"`
+}
+
 func authCheckMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
+		req := ctx.Request()
+		cid, ok1 := req.Header["Cid"]
+		apptoken, ok2 := req.Header["Apptoken"]
+		if !ok1 || !ok2 {
+			// エラー
+			return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "トークンがありません")
+		}
+		memberId := ""
+		if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" {
+			var mem MemberId
+			ctx.Bind(&mem)
+			memberId = mem.MemberId
+		} else {
+			vals := ctx.QueryParams()
+			if mems, ok := vals["member_id"]; ok {
+				memberId = mems[0]
+			} else {
+				// メンバーIDが存在しない
+			}
+		}
+		fmt.Println("CID:", cid)
+		fmt.Println("APPTOKEN:", apptoken)
+		fmt.Println("MemberId:", memberId)
 		// ログインチェック
-		if token, ok := ctx.Request().Header["Authorization"]; !ok {
+		/*if token, ok := ctx.Request().Header["Authorization"]; !ok {
 			return ERR_NO_AUTH_TOKEN
 			//return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "トークンがありません")
 		} else if token[0] != "token" {
 			return ERR_INVALID_TOKEN
 			//return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "トークンが正しくありません")
 		}
-		fmt.Println("トークンが正しい")
-		err := next(ctx)
-		return err
+		fmt.Println("トークンが正しい")*/
+		return next(ctx)
 	}
 }
 

@@ -31,7 +31,23 @@ func handlerHealthCheck(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(health)
 }
 
+type Login struct {
+	Id    string `json:"id"`
+	Token string `json:"token"`
+}
+
 func handlerLogin(w http.ResponseWriter, r *http.Request) {
+	var req Login
+	json.NewDecoder(r.Body).Decode(&req)
+	fmt.Println("TOKEN:", req.Token)
+	if req.Id != "hoge" {
+		// hogeじゃなかったらlogin状態にしない
+		w.WriteHeader(http.StatusUnauthorized)
+		result := types.Result{
+			Result: false,
+		}
+		json.NewEncoder(w).Encode(result)
+	}
 	cookie := &http.Cookie{
 		Name:    "Auth",
 		Value:   "auth",
@@ -66,9 +82,9 @@ func handlerLogout(w http.ResponseWriter, r *http.Request) {
 func handlerUser(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie("Auth")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("USERのAUTH取得失敗:", err)
 	} else {
-		fmt.Println(c.Value)
+		fmt.Println("USERのAUTH取得成功:", c.Value)
 	}
 	switch r.Method {
 	case "GET":

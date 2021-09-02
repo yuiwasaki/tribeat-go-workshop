@@ -105,6 +105,12 @@ type UserId string
 // PostApiClientGroupsJSONBody defines parameters for PostApiClientGroups.
 type PostApiClientGroupsJSONBody RequestGroupsPost
 
+// GetApiClientUsersParams defines parameters for GetApiClientUsers.
+type GetApiClientUsersParams struct {
+	// メンバーID
+	MemberId string `json:"member_id"`
+}
+
 // PostApiClientUsersJSONBody defines parameters for PostApiClientUsers.
 type PostApiClientUsersJSONBody RequestUser
 

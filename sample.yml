@@ -54,6 +54,13 @@ paths:
     get:
       summary: ユーザー一覧取得
       tags: []
+      parameters:
+        - name: "member_id"
+          in: query
+          description: メンバーID
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: ユーザー情報

@@ -11,6 +11,22 @@ import (
 
 type APIHandler struct{}
 
+type APIError struct {
+	Code    int
+	Message string
+}
+
+func NewAPIError(code int, message string) *APIError {
+	return &APIError{
+		Code:    code,
+		Message: message,
+	}
+}
+
+func (err *APIError) Error() string {
+	return fmt.Sprintf("Code=%d Message=%s", err.Code, err.Message)
+}
+
 // NewAPIHandler APIHandlerを作成する
 func NewAPIHandler() APIHandler {
 	return APIHandler{}
@@ -73,7 +89,13 @@ func (APIHandler) PostApiLogin(ctx echo.Context) error {
 		fmt.Println(err)
 		return ErrorResult(ctx, http.StatusInternalServerError, "ERROR", err.Error())
 	}
-	return fmt.Errorf("よくわからないエラー")
+	if req.Email != "hoge@hoge.com" {
+		return fmt.Errorf("HOGE")
+	}
+	res := oapi.ResultOK{
+		Result: true,
+	}
+	return ctx.JSON(http.StatusCreated, res)
 }
 
 func errorHandleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -83,6 +105,9 @@ func errorHandleMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			if e, ok := err.(*echo.HTTPError); ok {
 				return ErrorResult(ctx, e.Code, "BAD REQUEST", fmt.Sprintf("パラメーターが正しくない[%v]", e.Message))
+			}
+			if e, ok := err.(*APIError); ok {
+				return ErrorResult(ctx, e.Code, "API ERROR", fmt.Sprintf("APIでエラーが発生[%v]", e.Message))
 			}
 			return ErrorResult(ctx, http.StatusInternalServerError, "INTERNAL SERVER ERROR", fmt.Sprintf("サーバー内でエラーが発生しました[%v]", err))
 		}

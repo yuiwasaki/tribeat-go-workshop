@@ -21,7 +21,7 @@ type ServerInterface interface {
 	PostApiClientGroups(ctx echo.Context) error
 	// ユーザー一覧取得
 	// (GET /api/client/users)
-	GetApiClientUsers(ctx echo.Context) error
+	GetApiClientUsers(ctx echo.Context, params GetApiClientUsersParams) error
 	// ユーザー新規登録
 	// (POST /api/client/users)
 	PostApiClientUsers(ctx echo.Context) error
@@ -63,8 +63,17 @@ func (w *ServerInterfaceWrapper) PostApiClientGroups(ctx echo.Context) error {
 func (w *ServerInterfaceWrapper) GetApiClientUsers(ctx echo.Context) error {
 	var err error
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetApiClientUsersParams
+	// ------------- Required query parameter "member_id" -------------
+
+	err = runtime.BindQueryParameter("form", true, true, "member_id", ctx.QueryParams(), &params.MemberId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter member_id: %s", err))
+	}
+
 	// Invoke the callback with all the unmarshalled arguments
-	err = w.Handler.GetApiClientUsers(ctx)
+	err = w.Handler.GetApiClientUsers(ctx, params)
 	return err
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -12,11 +13,15 @@ import (
 )
 
 func TestPostApiLogin(t *testing.T) {
+	str := `{"email":"hoge@hoge.com", "password": "123456"}`
+	r := strings.NewReader(str)
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req := httptest.NewRequest(http.MethodPost, "/", r)
+	req.Header = http.Header{"Content-Type": []string{"application/json"}}
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	handler := APIHandler{}
+	// ここからテスト
 	err := handler.PostApiLogin(c)
 	if err != nil {
 		t.Error(err)
@@ -32,7 +37,6 @@ func TestPostApiLogin(t *testing.T) {
 	if !result.Result {
 		t.Error("戻り値が正しくない")
 	}
-
 }
 
 func BenchmarkXxx(b *testing.B) {
