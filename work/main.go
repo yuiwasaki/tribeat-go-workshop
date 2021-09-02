@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/deepmap/oapi-codegen/pkg/middleware"
@@ -10,6 +13,10 @@ import (
 	"github.com/yuiwasaki/tribeat-go-workshop/models"
 	"github.com/yuiwasaki/tribeat-go-workshop/oapi"
 )
+
+type MemberId struct {
+	MemberId string `json:"member_id"`
+}
 
 type APIHandler struct {
 	db *models.Model
@@ -49,6 +56,14 @@ func (api APIHandler) GetApiClientUsers(ctx echo.Context, params oapi.GetApiClie
 // ユーザー新規登録
 // (POST /api/client/users)
 func (api APIHandler) PostApiClientUsers(ctx echo.Context) error {
+	var req oapi.RequestUser
+	err := ctx.Bind(&req)
+	if err != nil {
+		fmt.Println(err)
+		return ErrorResult(ctx, http.StatusBadRequest, "正しくない", "リクエストが正しくない")
+	}
+	d, _ := json.Marshal(req)
+	fmt.Println(string(d))
 	return nil
 }
 
@@ -108,10 +123,6 @@ var (
 	ERR_INVALID_TOKEN = fmt.Errorf("INVALID TOKEN")
 )
 
-type MemberId struct {
-	MemberId string `json:"member_id"`
-}
-
 func authCheckMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		req := ctx.Request()
@@ -123,29 +134,28 @@ func authCheckMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		memberId := ""
 		if req.Method == "POST" || req.Method == "PUT" || req.Method == "PATCH" {
+			body, err := ioutil.ReadAll(ctx.Request().Body)
+			if err != nil {
+				return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "メンバーが存在しません")
+			}
 			var mem MemberId
-			ctx.Bind(&mem)
+			json.Unmarshal(body, &mem)
 			memberId = mem.MemberId
+			ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		} else {
 			vals := ctx.QueryParams()
 			if mems, ok := vals["member_id"]; ok {
 				memberId = mems[0]
 			} else {
 				// メンバーIDが存在しない
+				return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "メンバーが存在しません")
 			}
 		}
-		fmt.Println("CID:", cid)
-		fmt.Println("APPTOKEN:", apptoken)
+		fmt.Println("CID:", cid[0])
+		fmt.Println("APPTOKEN:", apptoken[0])
 		fmt.Println("MemberId:", memberId)
 		// ログインチェック
-		/*if token, ok := ctx.Request().Header["Authorization"]; !ok {
-			return ERR_NO_AUTH_TOKEN
-			//return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "トークンがありません")
-		} else if token[0] != "token" {
-			return ERR_INVALID_TOKEN
-			//return ErrorResult(ctx, http.StatusUnauthorized, "トークンエラー", "トークンが正しくありません")
-		}
-		fmt.Println("トークンが正しい")*/
+		fmt.Println("トークンが正しい")
 		return next(ctx)
 	}
 }
@@ -261,6 +271,7 @@ func RegisterHandlers(router *echo.Echo, handler APIHandler) {
 	router.POST("/api/login", wrapper.PostApiLogin)
 	clientGroup := router.Group("/api/client", authCheckMiddleware)
 	clientGroup.GET("/users", wrapper.GetApiClientUsers)
+	clientGroup.POST("/users", wrapper.PostApiClientUsers)
 	userGroup := clientGroup.Group("/users/:userId", checkUserMiddleware)
 	userGroup.GET("", wrapper.GetApiClientUsersUserId)
 	clientGroup.GET("/groups", wrapper.GetApiClientGroups)

@@ -30,6 +30,9 @@ type Group struct {
 
 // グループ情報
 type RequestGroupsPost struct {
+	// メンバーID
+	MemberId string `json:"member_id"`
+
 	// グループ名
 	Name string `json:"name"`
 }
@@ -42,7 +45,8 @@ type RequestLogin struct {
 
 // 追加するユーザー情報
 type RequestUser struct {
-	Name string `json:"name"`
+	MemberId string `json:"member_id"`
+	Name     string `json:"name"`
 }
 
 // エラー結果

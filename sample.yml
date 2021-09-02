@@ -222,6 +222,9 @@ components:
       type: object
       description: グループ情報
       properties:
+        member_id:
+          type: string
+          description: メンバーID
         name:
           type: string
           minLength: 1
@@ -229,6 +232,7 @@ components:
           description: グループ名
       required:
         - name
+        - member_id
     resultGroupsPost:
       type: object
       description: グループ作成成功
@@ -262,11 +266,14 @@ components:
       type: object
       description: 追加するユーザー情報
       properties:
+        member_id:
+          type: string
         name:
           type: string
           maxLength: 100
       required:
         - name
+        - member_id
     resultUsers:
       type: object
       description: ユーザー一覧
